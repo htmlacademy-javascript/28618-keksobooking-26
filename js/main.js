@@ -1,4 +1,3 @@
-import './card.js';
 import {getData} from './api.js';
 import {showMessage} from './popup-message.js';
 import {applyCardsFilter} from './filter.js';
@@ -23,12 +22,12 @@ import {
 
 const RERENDER_DELAY = 500;
 
-setStateAdForm('disabled');
-setStateFilterForm('disabled');
+setStateAdForm(true);
+setStateFilterForm(true);
 
 addMapToCanvas(() => {
-  setStateAdForm();
-  setStateFilterForm();
+  setStateAdForm(false);
+  setStateFilterForm(false);
 });
 
 getData((cards) => {
