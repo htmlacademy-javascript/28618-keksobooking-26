@@ -7,14 +7,14 @@ const NO_UI_SLIDER_STEP = 10;
 const NO_UI_SLIDER_DECIMAL_PLACES = 0;
 const MAX_ROOM_OPTION_VALUE = 100;
 const DEFAULT_AVATAR_URL = 'img/muffin-grey.svg';
-const housingTypeMinPrices = {
+const HousingTypeMinPrices = {
   bungalow: 0,
   flat: 1000,
   hotel: 3000,
   house: 5000,
   palace: 10000
 };
-const housingTypeNames = {
+const HousingTypeNames = {
   bungalow: 'бунгало',
   flat: 'квартиры',
   hotel: 'отеля',
@@ -53,37 +53,35 @@ const pristine = new Pristine(adForm, {
 });
 
 /**
- * Включение активного состояния формы отправки объявления
+ * Включение/выключение активного состояния формы отправки объявления
  */
-const enableAdForm = () => {
-  adForm.classList.remove('ad-form--disabled');
-  adFormFieldset.forEach((fieldset) => {
-    fieldset.disabled = false;
-  });
+const setStateAdForm = (state = 'enabled') => {
+  if (state === 'enabled') {
+    adForm.classList.remove('ad-form--disabled');
+    adFormFieldset.forEach((fieldset) => {
+      fieldset.disabled = false;
+    });
+  }
+  if (state === 'disabled') {
+    adForm.classList.add('ad-form--disabled');
+    adFormFieldset.forEach((fieldset) => {
+      fieldset.disabled = true;
+    });
+  }
 };
 
 /**
- * Включение неактивного состояния формы отправки объявления
+ * Включение/выключение активного состояния кнопки отправки формы
  */
-const disableAdForm = () => {
-  adForm.classList.add('ad-form--disabled');
-  adFormFieldset.forEach((fieldset) => {
-    fieldset.disabled = true;
-  });
-};
-
-/**
- * Включение активного состояния кнопки отправки формы
- */
-const enableAdFormSubmitButton = () => {
-  adFormSubmitButton.disabled = false;
-};
-
-/**
- * Включение неактивного состояния кнопки отправки формы
- */
-const disableAdFormSubmitButton = () => {
-  adFormSubmitButton.disabled = true;
+const setStateAdFormSubmitButton = (state = 'enabled') => {
+  switch (state) {
+    case 'enabled':
+      adFormSubmitButton.disabled = false;
+      break;
+    case 'disabled':
+      adFormSubmitButton.disabled = true;
+      break;
+  }
 };
 
 /**
@@ -97,11 +95,11 @@ const resetAdForm = () => {
  * Добавляет валидацию для поля "Цена за ночь"
  */
 const validateAdFormPriceField = () => {
-  const validate = (value) => value <= MAX_PRICE && value >= housingTypeMinPrices[adFormTypeField.value];
-  const errorMessage = () => (adFormPriceField.value > MAX_PRICE)
-    ? `Стоимость ${housingTypeNames[adFormTypeField.value]} не более ${MAX_PRICE} руб.`
-    : `Стоимость ${housingTypeNames[adFormTypeField.value]} не менее ${housingTypeMinPrices[adFormTypeField.value]}`;
-  pristine.addValidator(adFormPriceField, validate, errorMessage);
+  const validate = (value) => value <= MAX_PRICE && value >= HousingTypeMinPrices[adFormTypeField.value];
+  const getErrorMessage = () => (adFormPriceField.value > MAX_PRICE)
+    ? `Стоимость ${HousingTypeNames[adFormTypeField.value]} не более ${MAX_PRICE} руб.`
+    : `Стоимость ${HousingTypeNames[adFormTypeField.value]} не менее ${HousingTypeMinPrices[adFormTypeField.value]}`;
+  pristine.addValidator(adFormPriceField, validate, getErrorMessage);
 };
 
 /**
@@ -134,7 +132,7 @@ const addSliderToAdFormPriceField = () => {
         min: Number(adFormPriceField.min),
         max: Number(adFormPriceField.max)
       },
-      start: housingTypeMinPrices[adFormTypeField.value],
+      start: HousingTypeMinPrices[adFormTypeField.value],
       step: NO_UI_SLIDER_STEP,
       connect: 'lower',
       format: {
@@ -161,7 +159,7 @@ const addUpdateEventAdFormSlider = () => {
  */
 const addChangeEventAdFormTypeField = () => {
   adFormTypeField.addEventListener('change', () => {
-    setValueAdFormPriceField(housingTypeMinPrices[adFormTypeField.value]);
+    setValueAdFormPriceField(HousingTypeMinPrices[adFormTypeField.value]);
     pristine.validate();
   });
 };
@@ -189,17 +187,19 @@ const addChangeEventAdFormTimeOutField = () => {
  */
 const validateAdFormRoomsField = () => {
   const validate = (value) => RatioRoomsSeats[value].includes(+adFormCapacityField.value);
-  const errorMessage = () => (+adFormRoomsField.value === MAX_ROOM_OPTION_VALUE)
+  const getErrorMessage = () => (+adFormRoomsField.value === MAX_ROOM_OPTION_VALUE)
     ? 'Не для размещения гостей'
     : 'Нельзя поселить столько гостей';
-  pristine.addValidator(adFormRoomsField, validate, errorMessage);
+  pristine.addValidator(adFormRoomsField, validate, getErrorMessage);
 };
 
 /**
  * Добавляет обработчик на изменение поля "Количество комнат"
  */
 const addChangeEventAdFormRoomsField = () => {
-  adFormRoomsField.addEventListener('change', () => pristine.validate);
+  adFormRoomsField.addEventListener('change', () => {
+    pristine.validate();
+  });
 };
 
 /**
@@ -207,28 +207,32 @@ const addChangeEventAdFormRoomsField = () => {
  */
 const validateAdFormCapacityField = () => {
   const validate = (value) => RatioRoomsSeats[adFormRoomsField.value].includes(+value);
-  const errorMessage = () => (+adFormRoomsField.value === MAX_ROOM_OPTION_VALUE)
+  const getErrorMessage = () => (+adFormRoomsField.value === MAX_ROOM_OPTION_VALUE)
     ? 'Нельзя размещать гостей'
     : 'Слишком мало комнат';
-  pristine.addValidator(adFormCapacityField, validate, errorMessage);
+  pristine.addValidator(adFormCapacityField, validate, getErrorMessage);
 };
 
 /**
  * Добавляет обработчик на изменение поля "Количество мест"
  */
 const addChangeEventAdFormCapacityField = () => {
-  adFormCapacityField.addEventListener('change', () => pristine.validate);
+  adFormCapacityField.addEventListener('change', () => {
+    pristine.validate();
+  });
 };
 
 /**
  * Добавляет обработчик сбрасывания формы добавления объявления
  */
-const addAdFormResetListener = () => {
+const addAdFormResetListener = (cb) => {
   const onResetAdForm = () => {
     adFormAvatarField.src = DEFAULT_AVATAR_URL;
     adFormPhotoField.innerHTML = '';
     adFormSlider.noUiSlider.reset();
     pristine.reset();
+    setValueAdFormPriceField(HousingTypeMinPrices['flat']);
+    cb();
   };
   adForm.addEventListener('reset', onResetAdForm);
 };
@@ -255,14 +259,12 @@ validateAdFormRoomsField();
 validateAdFormCapacityField();
 addChangeEventAdFormTypeField();
 addSliderToAdFormPriceField();
-setValueAdFormPriceField(housingTypeMinPrices[adFormTypeField.value]);
 addChangeEventAdFormTimeInField();
 addChangeEventAdFormTimeOutField();
 addChangeEventAdFormRoomsField();
 addChangeEventAdFormCapacityField();
 addChangeEventAdFormPriceField();
 addUpdateEventAdFormSlider();
-addAdFormResetListener();
 addAvatarUploader();
 addHousePhotoUploader();
 
@@ -275,10 +277,10 @@ const addAdFormSubmitListener = (cb) => {
     const isValidated = pristine.validate();
     if (isValidated) {
       const formData = new FormData(evt.target);
-      disableAdFormSubmitButton();
+      setStateAdFormSubmitButton('disabled');
       sendData(
         () => {
-          enableAdFormSubmitButton();
+          setStateAdFormSubmitButton();
           showMessage('success', 'Данные успешно отправлены');
           resetAdForm();
         },
@@ -293,11 +295,9 @@ const addAdFormSubmitListener = (cb) => {
 };
 
 export {
-  enableAdForm,
-  disableAdForm,
-  enableAdFormSubmitButton,
-  disableAdFormSubmitButton,
+  setStateAdForm,
   resetAdForm,
   addAdFormSubmitListener,
+  addAdFormResetListener,
   adFormAddressField
 };
